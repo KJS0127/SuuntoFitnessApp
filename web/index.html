@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>정수's 운동</title>
+  
+  <!-- PWA & iOS 홈 화면 추가 설정 -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="정수's 운동">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/running.png">
+  <meta name="theme-color" content="#000000">
+
+  <!-- 스타일시트 및 라이브러리 (Leaflet 지도, Confetti 폭죽) -->
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div id="app-container">
+    
+    <!-- 1. 상단 앱바 헤더 -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="watch-icon-wrap">
+          <span>⌚</span>
+          <span class="watch-dot"></span>
+        </div>
+        <h1 class="brand-title">정수's 운동</h1>
+        <button id="btn-open-goals" class="action-btn" title="일일 목표 설정" style="width:30px; height:30px; margin-left:4px;">
+          🎯
+        </button>
+      </div>
+      
+      <div class="header-actions">
+        <button id="btn-open-badges" class="action-btn" title="배지 보관함">👑</button>
+        <button id="btn-start-run" class="action-btn btn-plus" title="러닝 시작">➕</button>
+        <button id="btn-test-celebration" class="action-btn" title="목표 달성 테스트">🔔</button>
+      </div>
+    </header>
+
+    <!-- 2. 세그먼트 탭 [대시보드 | 활동] -->
+    <nav class="segment-tabs">
+      <button class="tab-btn active" data-tab="dashboard">대시보드</button>
+      <button class="tab-btn" data-tab="activities">활동</button>
+    </nav>
+
+    <!-- 3. 대시보드 탭 본문 -->
+    <main id="tab-dashboard" class="content-area">
+      <h2 class="section-title">위젯</h2>
+
+      <!-- (1) 걸음 수 3단 분리 및 목표 카드 -->
+      <section class="suunto-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3>걸음 수</h3>
+            <p>오늘 (진짜 걸음 기준)</p>
+          </div>
+          <div class="badge-icon" style="color: var(--accent-blue);">🚶</div>
+        </div>
+        <div>
+          <div>
+            <span class="big-number" id="val-real-steps">9,820</span>
+            <span class="unit-label">/ <span id="val-target-steps">10,000</span> 보</span>
+          </div>
+          <p id="label-step-remain" style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+            목표까지 -180 걸음
+          </p>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="bar-step-progress" style="width: 98%;"></div>
+        </div>
+        <div class="step-tier-grid">
+          <div class="step-pill">
+            <span class="label">전체 걸음</span>
+            <span class="val" id="val-total-steps" style="color: var(--text-secondary);">11,450</span>
+          </div>
+          <div class="step-pill">
+            <span class="label">진짜 걸음</span>
+            <span class="val" style="color: var(--accent-blue);">9,820</span>
+          </div>
+          <div class="step-pill">
+            <span class="label">운동 시</span>
+            <span class="val" id="val-workout-steps" style="color: var(--accent-yellow);">6,180</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- (2) 최근 활동 미니 맵 위젯 (탭 시 스크린샷 1번 상세 화면 오픈) -->
+      <div id="mini-map" title="탭하여 상세 분석 보기">
+        <div class="map-badge">
+          <div class="map-badge-dot"></div>
+          <span>5.01 km (울산대공원)</span>
+        </div>
+      </div>
+
+      <!-- (3) 월간 지속 시간 차트 -->
+      <section class="suunto-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3>지속 시간</h3>
+            <p>이번 달</p>
+          </div>
+          <div class="badge-icon" style="background: var(--accent-yellow); color:#000;">🏃</div>
+        </div>
+        <div>
+          <span class="big-number">18.5</span>
+          <span class="unit-label">시간</span>
+        </div>
+        <!-- 모의 막대 차트 -->
+        <div style="display:flex; align-items:flex-end; gap:6px; height:50px; margin-top:8px;">
+          <div style="flex:1; background:#262626; height:30%; border-radius:2px;"></div>
+          <div style="flex:1; background:var(--accent-yellow); height:85%; border-radius:2px;"></div>
+          <div style="flex:1; background:#262626; height:20%; border-radius:2px;"></div>
+          <div style="flex:1; background:var(--accent-yellow); height:60%; border-radius:2px;"></div>
+          <div style="flex:1; background:#262626; height:10%; border-radius:2px;"></div>
+          <div style="flex:1; background:var(--accent-yellow); height:95%; border-radius:2px;"></div>
+          <div style="flex:1; background:var(--accent-yellow); height:70%; border-radius:2px;"></div>
+        </div>
+      </section>
+
+      <!-- (4) 칼로리 & 상승 고도 (2열) -->
+      <div class="grid-2col">
+        <section class="suunto-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>칼로리</h3>
+              <p>오늘</p>
+            </div>
+            <span style="color:var(--accent-orange);">🔥</span>
+          </div>
+          <div>
+            <span class="big-number" style="font-size:24px;">836</span>
+            <span class="unit-label" style="font-size:12px;">kcal</span>
+          </div>
+          <p style="font-size:10px; color:var(--accent-green);">목표 초과 달성!</p>
+        </section>
+
+        <section class="suunto-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>상승</h3>
+              <p>이번 주</p>
+            </div>
+            <span style="color:var(--accent-green);">↗</span>
+          </div>
+          <div>
+            <span class="big-number" style="font-size:24px;">51</span>
+            <span class="unit-label" style="font-size:12px;">m</span>
+          </div>
+          <p style="font-size:10px; color:var(--text-tertiary);">누적 획득 고도</p>
+        </section>
+      </div>
+
+      <!-- (5) 순토 Progress (훈련 부하: CTL / ATL / TSB) -->
+      <section class="suunto-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3>Progress</h3>
+            <p>오늘</p>
+          </div>
+          <div class="badge-icon" style="background: var(--accent-red); color:#fff; font-size:10px;">⏩</div>
+        </div>
+        <p style="font-size: 13px; color: var(--text-secondary);">
+          운동을 추적하여 체력과 피로도 인사이트를 얻으세요.
+        </p>
+        <div style="display:flex; justify-content:space-between; padding-top:6px; border-top:1px solid rgba(255,255,255,0.08);">
+          <div>
+            <span style="font-size:10px; color:var(--text-tertiary); display:block;">CTL (체력)</span>
+            <span style="font-size:18px; font-weight:700; color:var(--accent-blue);">49</span>
+          </div>
+          <div style="width:1px; background:rgba(255,255,255,0.1);"></div>
+          <div>
+            <span style="font-size:10px; color:var(--text-tertiary); display:block;">ATL (피로)</span>
+            <span style="font-size:18px; font-weight:700; color:var(--accent-red);">54</span>
+          </div>
+          <div style="width:1px; background:rgba(255,255,255,0.1);"></div>
+          <div>
+            <span style="font-size:10px; color:var(--text-tertiary); display:block;">TSB (컨디션)</span>
+            <span style="font-size:18px; font-weight:700; color:var(--accent-yellow);">-5</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- (6) 리소스 (바디 배터리) -->
+      <section class="suunto-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3>리소스</h3>
+            <p>지금</p>
+          </div>
+          <div class="badge-icon" style="background:var(--accent-green); color:#000;">📶</div>
+        </div>
+        <div>
+          <span class="big-number">76</span>
+          <span class="unit-label">%</span>
+        </div>
+        <div class="progress-bar-bg" style="height:5px;">
+          <div style="width:76%; height:100%; background:var(--accent-green); border-radius:3px;"></div>
+        </div>
+      </section>
+
+      <!-- (7) 수면 분석 & 심박수 (2열) -->
+      <div class="grid-2col">
+        <section class="suunto-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>수면</h3>
+              <p>어제 밤</p>
+            </div>
+            <span style="color:var(--accent-purple);">🌙</span>
+          </div>
+          <div>
+            <span class="big-number" style="font-size:22px;">7</span>
+            <span class="unit-label" style="font-size:11px;">시간</span>
+            <span class="big-number" style="font-size:22px;">20</span>
+            <span class="unit-label" style="font-size:11px;">분</span>
+          </div>
+          <p style="font-size:10px; color:var(--accent-red);">목표 대비 -40분</p>
+        </section>
+
+        <section class="suunto-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h3>심박수 / HRV</h3>
+              <p>안정시</p>
+            </div>
+            <span style="color:var(--accent-red);">❤️</span>
+          </div>
+          <div>
+            <span class="big-number" style="font-size:22px;">64</span>
+            <span class="unit-label" style="font-size:11px;">bpm</span>
+          </div>
+          <p style="font-size:10px; color:var(--accent-green);">HRV 52 ms (양호)</p>
+        </section>
+      </div>
+
+      <!-- (8) 최근 30일 잔디 매트릭스 -->
+      <section class="suunto-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3>최근 30일</h3>
+            <p>14일 완주 달성</p>
+          </div>
+          <span style="color:var(--accent-green); font-size:12px; font-weight:700;">달성률 46%</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-tertiary); text-align:center;">
+          <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+        </div>
+        <div class="grass-grid" id="grass-container">
+          <!-- JS로 도트 28개 렌더링 -->
+        </div>
+      </section>
+
+      <!-- (9) 커뮤트 탄소 절감 위젯 -->
+      <section class="suunto-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3>커뮤트</h3>
+            <p>이번 달</p>
+          </div>
+          <span style="color:var(--accent-green); font-size:18px;">☁️</span>
+        </div>
+        <div>
+          <span class="big-number">14.8</span>
+          <span class="unit-label">kg CO₂e 줄임</span>
+        </div>
+        <div style="display:flex; gap:12px; margin-top:4px;">
+          <span style="font-size:11px; background:#222; padding:4px 8px; border-radius:12px;">🚲 6회</span>
+          <span style="font-size:11px; background:#222; padding:4px 8px; border-radius:12px;">🏃 2회</span>
+          <span style="font-size:11px; background:#222; padding:4px 8px; border-radius:12px;">🚶 15회</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- 4. 활동 탭 본문 -->
+    <main id="tab-activities" class="content-area" style="display: none;">
+      <h2 class="section-title">최근 운동 기록</h2>
+      <div id="activity-item-card" class="suunto-card" style="cursor: pointer;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="background:var(--accent-yellow); color:#000; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px;">
+            🏃
+          </div>
+          <div style="flex:1;">
+            <h4 style="font-size:15px; font-weight:700;">달리기 (울산대공원)</h4>
+            <p style="font-size:12px; color:var(--text-secondary); margin-top:2px;">
+              32분 42초 • 5.01 km • 06'32 /km
+            </p>
+          </div>
+          <span style="color:var(--text-tertiary);">➔</span>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- MARK: - 팝업 모달들 -->
+
+  <!-- (1) 목표 설정 모달 -->
+  <div id="modal-goals" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size:18px; font-weight:700;">일일 운동 목표 설정</h3>
+        <button class="close-modal-btn" style="background:none; border:none; color:#fff; font-size:18px; cursor:pointer;">✕</button>
+      </div>
+      <div>
+        <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:6px;">
+          진짜 걸음 수 목표: <strong id="goal-step-text" style="color:var(--accent-blue);">10,000보</strong>
+        </label>
+        <input type="range" id="input-goal-steps" min="4000" max="20000" step="500" value="10000" style="width:100%; accent-color:var(--accent-blue);">
+      </div>
+      <div>
+        <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:6px;">
+          활동 칼로리 목표: <strong id="goal-cal-text" style="color:var(--accent-orange);">500 kcal</strong>
+        </label>
+        <input type="range" id="input-goal-cal" min="200" max="1200" step="50" value="500" style="width:100%; accent-color:var(--accent-orange);">
+      </div>
+      <button class="primary-btn" id="btn-save-goals">설정 완료</button>
+    </div>
+  </div>
+
+  <!-- (2) 배지 보관함 모달 -->
+  <div id="modal-badges" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size:18px; font-weight:700;">업적 및 배지 보관함</h3>
+        <button class="close-modal-btn" style="background:none; border:none; color:#fff; font-size:18px; cursor:pointer;">✕</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;" id="badge-grid">
+        <!-- JS로 배지 렌더링 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- (3) 목표 100% 달성 전체 화면 축하 모달 -->
+  <div id="modal-celebration" class="modal-overlay">
+    <div class="modal-box" style="text-align:center; align-items:center;">
+      <div style="font-size:64px; animation: bounce 1s infinite;">🏆</div>
+      <h2 style="font-size:24px; font-weight:800; color:#fff;">목표 달성 완료! 🎉</h2>
+      <h3 style="font-size:18px; font-weight:700; color:var(--accent-yellow);">진짜 10,000보 클럽</h3>
+      <p style="font-size:14px; color:var(--text-secondary);">
+        오늘 목표치인 진짜 걸음 10,000보를 완벽하게 돌파하셨습니다!
+      </p>
+      <button class="primary-btn" id="btn-close-celebration" style="margin-top:10px;">
+        기념하고 저장하기
+      </button>
+    </div>
+  </div>
+
+  <!-- (4) 스크린샷 1번 완전 복원: 러닝 결과 상세 모달 -->
+  <div id="modal-run-detail" class="modal-overlay">
+    <div class="modal-box" style="max-width:440px; padding:0; overflow:hidden; border-radius:24px;">
+      <div style="position:relative;">
+        <div id="detail-map" style="width:100%; height:240px;"></div>
+        <button class="close-modal-btn" style="position:absolute; top:14px; left:14px; z-index:1000; background:rgba(0,0,0,0.65); border:none; color:#fff; width:34px; height:34px; border-radius:50%; font-size:16px; cursor:pointer;">←</button>
+        <div style="position:absolute; bottom:8px; left:14px; z-index:1000; color:#fff; font-size:12px; font-weight:600; text-shadow:0 1px 4px rgba(0,0,0,0.8);">
+          울산광역시 ☀️ 11°C 💨 3 m/s
+        </div>
+      </div>
+      <div style="padding:16px 20px 24px; display:flex; flex-direction:column; gap:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 style="font-size:20px; font-weight:800;">달리기</h3>
+            <p style="font-size:12px; color:var(--text-secondary);">08.04.2025, 20:19 - 20:53 🔒</p>
+          </div>
+          <span style="font-size:28px;">🏃</span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <span style="font-size:11px; background:#222; padding:4px 8px; border-radius:12px; color:var(--text-secondary);">⌚ Suunto Spartan Sport WHR</span>
+          <span style="font-size:11px; background:#222; padding:4px 8px; border-radius:12px; color:var(--text-secondary);">▲ VO₂max</span>
+        </div>
+        <div style="font-size:13px; font-weight:600; color:var(--accent-yellow);">
+          ⭐ 이 경로에서 두 번째로 빠른 시간 ⭐ 2달 내 첫 번째 달리기
+        </div>
+        <!-- 2열 지표 그리드 -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div style="background:#1b1b1e; padding:10px; border-radius:12px;">
+            <span style="font-size:11px; color:var(--text-secondary); display:block;">지속 시간</span>
+            <span style="font-size:18px; font-weight:700;">32'42.10</span>
+          </div>
+          <div style="background:#1b1b1e; padding:10px; border-radius:12px;">
+            <span style="font-size:11px; color:var(--text-secondary); display:block;">거리</span>
+            <span style="font-size:18px; font-weight:700;">5.01 km</span>
+          </div>
+          <div style="background:#1b1b1e; padding:10px; border-radius:12px;">
+            <span style="font-size:11px; color:var(--text-secondary); display:block;">평균 심박수</span>
+            <span style="font-size:18px; font-weight:700;">162 bpm</span>
+          </div>
+          <div style="background:#1b1b1e; padding:10px; border-radius:12px;">
+            <span style="font-size:11px; color:var(--text-secondary); display:block;">평균 페이스</span>
+            <span style="font-size:18px; font-weight:700;">06'32 /km</span>
+          </div>
+          <div style="background:#1b1b1e; padding:10px; border-radius:12px;">
+            <span style="font-size:11px; color:var(--text-secondary); display:block;">NGP® (경사도 보정)</span>
+            <span style="font-size:18px; font-weight:700;">06'20 /km</span>
+          </div>
+          <div style="background:#1b1b1e; padding:10px; border-radius:12px;">
+            <span style="font-size:11px; color:var(--text-secondary); display:block;">상승</span>
+            <span style="font-size:18px; font-weight:700;">51 m</span>
+          </div>
+          <div style="background:#1b1b1e; padding:10px; border-radius:12px;">
+            <span style="font-size:11px; color:var(--text-secondary); display:block;">TSS (훈련 부하)</span>
+            <span style="font-size:18px; font-weight:700;">58</span>
+          </div>
+          <div style="background:#1b1b1e; padding:10px; border-radius:12px;">
+            <span style="font-size:11px; color:var(--text-secondary); display:block;">느낌</span>
+            <span style="font-size:18px; font-weight:700;">😊 좋음</span>
+          </div>
+          <div style="background:#1b1b1e; padding:10px; border-radius:12px;">
+            <span style="font-size:11px; color:var(--text-secondary); display:block;">평균 걸음 케이던스</span>
+            <span style="font-size:18px; font-weight:700;">167 spm</span>
+          </div>
+          <div style="background:#1b1b1e; padding:10px; border-radius:12px;">
+            <span style="font-size:11px; color:var(--text-secondary); display:block;">칼로리</span>
+            <span style="font-size:18px; font-weight:700;">836 kcal</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- (5) 실시간 GPS 러닝 트래커 풀스크린 모달 -->
+  <div id="live-tracker-modal">
+    <div style="position:relative; flex:1;">
+      <div id="live-map"></div>
+      <button id="btn-close-tracker" style="position:absolute; top:20px; left:20px; z-index:1000; background:rgba(0,0,0,0.65); border:none; color:#fff; width:38px; height:38px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
+      <div style="position:absolute; top:20px; right:20px; z-index:1000; background:rgba(0,0,0,0.7); padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; color:var(--accent-green); display:flex; align-items:center; gap:6px;">
+        <span style="width:8px; height:8px; background:var(--accent-green); border-radius:50%;"></span>
+        실시간 GPS 추적 중
+      </div>
+    </div>
+    <!-- HUD 영역 -->
+    <div style="padding:20px; background:#0e0e10; display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; gap:14px;">
+        <div style="flex:1; background:#1b1b1e; padding:14px; border-radius:16px;">
+          <span style="font-size:12px; color:var(--text-secondary); display:block;">시간</span>
+          <span id="live-time" style="font-size:32px; font-weight:800; font-family:monospace;">00:00</span>
+        </div>
+        <div style="flex:1; background:#1b1b1e; padding:14px; border-radius:16px;">
+          <span style="font-size:12px; color:var(--text-secondary); display:block;">거리</span>
+          <span id="live-dist" style="font-size:32px; font-weight:800; color:var(--accent-yellow);">0.00</span>
+          <span style="font-size:14px; color:var(--text-secondary);">km</span>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-around; background:#1b1b1e; padding:10px; border-radius:12px;">
+        <div>
+          <span style="font-size:10px; color:var(--text-tertiary); display:block;">페이스</span>
+          <span id="live-pace" style="font-size:16px; font-weight:700; color:var(--accent-blue);">06'32"</span>
+        </div>
+        <div>
+          <span style="font-size:10px; color:var(--text-tertiary); display:block;">심박수</span>
+          <span id="live-hr" style="font-size:16px; font-weight:700; color:var(--accent-red);">162 bpm</span>
+        </div>
+        <div>
+          <span style="font-size:10px; color:var(--text-tertiary); display:block;">케이던스</span>
+          <span id="live-cadence" style="font-size:16px; font-weight:700; color:var(--accent-green);">167 spm</span>
+        </div>
+      </div>
+      <!-- 컨트롤 버튼 -->
+      <div style="display:flex; justify-content:center; gap:24px; padding-top:6px;">
+        <button id="btn-pause-run" style="width:68px; height:68px; border-radius:50%; background:#262626; border:none; color:#fff; font-size:22px; cursor:pointer;">⏸️</button>
+        <button id="btn-stop-run" style="width:68px; height:68px; border-radius:50%; background:var(--accent-red); border:none; color:#fff; font-size:22px; font-weight:bold; cursor:pointer;">⏹️</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "정수's 운동 - 피트니스 대시보드",
+  "short_name": "정수's 운동",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "description": "순토(Suunto) 스타일 프리미엄 피트니스 대시보드 & 러닝 트래커",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/192/running.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/color/512/running.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
