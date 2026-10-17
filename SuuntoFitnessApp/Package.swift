@@ -4,8 +4,7 @@ import PackageDescription
 let package = Package(
     name: "SuuntoFitnessApp",
     platforms: [
-        .iOS(.v17),
-        .macOS(.v14) // 최신 macOS 14 빌드 호환성 명시
+        .iOS(.v17) // 순수 iOS 17+ 전용 앱
     ],
     products: [
         .library(
