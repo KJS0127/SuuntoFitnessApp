@@ -15,7 +15,6 @@ final class LocationAutoPauseTests: XCTestCase {
     func testInaccurateLocationIsFilteredOut() {
         locationManager.startRunTracking()
         
-        // 오차 45미터의 부정확한 GPS 위치 시뮬레이션
         let inaccurateLocation = CLLocation(
             coordinate: CLLocationCoordinate2D(latitude: 35.53, longitude: 129.30),
             altitude: 50,
@@ -24,7 +23,7 @@ final class LocationAutoPauseTests: XCTestCase {
             timestamp: Date()
         )
         
-        locationManager.locationManager(CLLocationManager(), didUpdateLocations: [inaccurateLocation])
+        locationManager.handleLocationUpdates([inaccurateLocation])
         
         XCTAssertEqual(locationManager.distanceMeters, 0.0, "오차가 20m를 초과하는 GPS 좌표는 누적 거리에 반영되지 않아야 합니다.")
         XCTAssertTrue(locationManager.recordedTrackPoints.isEmpty)
@@ -56,7 +55,7 @@ final class LocationAutoPauseTests: XCTestCase {
             timestamp: Date().addingTimeInterval(10)
         )
         
-        locationManager.locationManager(CLLocationManager(), didUpdateLocations: [loc1, loc2])
+        locationManager.handleLocationUpdates([loc1, loc2])
         
         XCTAssertGreaterThan(locationManager.distanceMeters, 30.0, "유효한 두 지점 간의 이동 거리가 정상적으로 누적되어야 합니다.")
         XCTAssertEqual(locationManager.recordedTrackPoints.count, 2)
