@@ -12,9 +12,9 @@ public struct MainTabView: View {
                 SuuntoTheme.background.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // MARK: - 1. 상단 순토 앱바 헤더
-                    HStack(spacing: 14) {
-                        // 워치 상태 및 더보기
+                    // MARK: - 1. 상단 앱바 헤더 (정수's 운동)
+                    HStack(spacing: 12) {
+                        // 워치 상태 및 앱 이름
                         HStack(spacing: 8) {
                             ZStack(alignment: .topTrailing) {
                                 Image(systemName: "applewatch")
@@ -28,6 +28,11 @@ public struct MainTabView: View {
                                         .offset(x: 2, y: -2)
                                 }
                             }
+                            
+                            // 앱 이름 표기
+                            Text("정수's 운동")
+                                .font(.system(size: 17, weight: .bold))
+                                .foregroundColor(SuuntoTheme.textPrimary)
                             
                             // 목표 설정 버튼
                             Button(action: {
@@ -139,14 +144,11 @@ public struct MainTabView: View {
                     .zIndex(100)
                 }
             }
-            // 실시간 러닝 트래커 풀스크린
             .fullScreenCover(isPresented: $showLiveTracker) {
                 LiveRunningTrackerView { completedRecord in
                     viewModel.recentWorkout = completedRecord
-                    // 운동 시 걸음 수 증가
                     viewModel.stepBreakdown.workoutSteps += completedRecord.cadenceSpm * Int(completedRecord.durationSeconds / 60)
                     viewModel.stepBreakdown.realSteps += completedRecord.cadenceSpm * Int(completedRecord.durationSeconds / 60)
-                    // 완주 상세 결과 화면 자동 오픈
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         viewModel.showWorkoutDetail = true
                     }
@@ -180,7 +182,7 @@ public struct MainTabView: View {
     }
 }
 
-// MARK: - '활동' 탭 서브 뷰 (간략 리스트)
+// MARK: - '활동' 탭 서브 뷰
 private struct ActivitiesListView: View {
     @ObservedObject var viewModel: DashboardViewModel
     

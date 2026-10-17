@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- 아이폰 홈 화면에 표시되는 앱 이름 -->
+    <key>CFBundleDisplayName</key>
+    <string>정수's 운동</string>
+    <key>CFBundleName</key>
+    <string>정수's 운동</string>
+    
+    <!-- HealthKit 건강 데이터 연동 권한 안내 문구 -->
+    <key>NSHealthShareUsageDescription</key>
+    <string>걸음 수, 심박수, 수면 및 활동 칼로리를 정밀하게 연동하여 대시보드에 표시하기 위해 건강 데이터 접근 권한이 필요합니다.</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>러닝 및 운동 세션 기록을 건강 앱에 저장하기 위해 권한이 필요합니다.</string>
+    
+    <!-- 백그라운드 GPS 위치 권한 안내 문구 -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>러닝 중 실시간 이동 경로와 페이스, 거리를 지도에 표시하기 위해 위치 권한이 필요합니다.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>화면이 꺼지거나 다른 앱을 사용할 때도 백그라운드에서 끊김 없이 러닝 코스를 기록하기 위해 위치 권한이 필요합니다.</string>
+    
+    <!-- CoreMotion 보행/걸음 센서 권한 안내 문구 -->
+    <key>NSMotionUsageDescription</key>
+    <string>차량 탑승 등의 노이즈를 필터링하고 실제 60 spm 이상의 유효한 '진짜 걸음 수'만을 측정하기 위해 동작 센서 권한이 필요합니다.</string>
+
+    <!-- 백그라운드 실행 모드 (GPS 위치 추적) -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+    </array>
+</dict>
+</plist>
