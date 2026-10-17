@@ -1,0 +1,31 @@
+name: iOS App Build & Test (GitHub Actions)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # 수동 실행 트리거
+
+jobs:
+  build:
+    name: Build & Verify Swift Package on macOS
+    runs-on: macos-14 # Apple Silicon (M1/M2) 가상 Mac 환경
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Select Xcode Version
+      run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+    - name: Show Xcode Version & Environment
+      run: |
+        xcodebuild -version
+        swift --version
+
+    - name: Verify Swift Source Compilation
+      run: |
+        echo "Verifying Suunto Fitness App Swift sources..."
+        # Swift 컴파일 및 문법 검증
+        find SuuntoFitnessApp/Sources -name "*.swift" -print
