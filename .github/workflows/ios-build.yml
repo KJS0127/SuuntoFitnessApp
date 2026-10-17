@@ -19,21 +19,21 @@ jobs:
     - name: Select Xcode Version
       run: sudo xcode-select -s /Applications/Xcode_15.4.app
 
-    - name: Diagnostics
+    - name: Environment Diagnostics
       run: |
         xcodebuild -version
-        xcrun --sdk iphonesimulator --show-sdk-path
 
-    - name: Compile with iOS SDK
+    - name: Build iOS Target with Official Xcode
       run: |
         echo "=========================================="
-        echo "  Compiling for iOS 17 Simulator SDK...   "
+        echo "  Building SuuntoFitnessApp with Xcode... "
         echo "=========================================="
-        SDK_PATH=$(xcrun --sdk iphonesimulator --show-sdk-path)
         cd SuuntoFitnessApp
-        swift build \
-          -Xswiftc "-sdk" -Xswiftc "$SDK_PATH" \
-          -Xswiftc "-target" -Xswiftc "arm64-apple-ios17.0-simulator"
+        xcodebuild build \
+          -scheme SuuntoFitnessApp \
+          -destination "generic/platform=iOS" \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO
 
     - name: Create iOS App Bundle & IPA Package
       run: |
@@ -48,13 +48,7 @@ jobs:
           cp SuuntoFitnessApp/Sources/App/Info.plist build/정수_운동.app/Info.plist
         fi
         
-        # 컴파일된 바이너리 복사
-        BIN_PATH=$(find SuuntoFitnessApp/.build -type f -perm +111 -name "SuuntoFitnessApp*" | head -n 1)
-        if [ -f "$BIN_PATH" ]; then
-          cp "$BIN_PATH" build/정수_운동.app/정수_운동
-        fi
-        
-        # 소스 파일 및 메타데이터 포함
+        # 소스 파일 및 리소스 번들 탑재
         cp -R SuuntoFitnessApp/Sources build/정수_운동.app/
         cp -R build/정수_운동.app build/Payload/
         
