@@ -5,12 +5,12 @@ on:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
-  workflow_dispatch: # 수동 실행 트리거
+  workflow_dispatch: # 웹에서 수동으로 [Run workflow] 클릭 가능
 
 jobs:
   build:
-    name: Build & Verify Swift Package on macOS
-    runs-on: macos-14 # Apple Silicon (M1/M2) 가상 Mac 환경
+    name: Build & Package iOS App
+    runs-on: macos-14 # Apple Silicon M1/M2 가상 Mac 환경
 
     steps:
     - name: Checkout Repository
@@ -19,13 +19,55 @@ jobs:
     - name: Select Xcode Version
       run: sudo xcode-select -s /Applications/Xcode_15.4.app
 
-    - name: Show Xcode Version & Environment
+    - name: Environment Diagnostics
       run: |
         xcodebuild -version
         swift --version
 
-    - name: Verify Swift Source Compilation
+    - name: Run Unit Test Suite
       run: |
-        echo "Verifying Suunto Fitness App Swift sources..."
-        # Swift 컴파일 및 문법 검증
-        find SuuntoFitnessApp/Sources -name "*.swift" -print
+        echo "=========================================="
+        echo "  Running SuuntoFitnessApp Unit Tests...  "
+        echo "=========================================="
+        cd SuuntoFitnessApp
+        swift test
+
+    - name: Build iOS Application Binary
+      run: |
+        echo "=========================================="
+        echo "  Compiling iOS App Sources...           "
+        echo "=========================================="
+        cd SuuntoFitnessApp
+        swift build -c release
+
+    - name: Create iOS App Bundle & IPA Package
+      run: |
+        mkdir -p build/Payload
+        mkdir -p build/SuuntoFitnessApp.app
+        
+        # Info.plist 복사
+        if [ -f "SuuntoFitnessApp/Sources/App/Info.plist" ]; then
+          cp SuuntoFitnessApp/Sources/App/Info.plist build/SuuntoFitnessApp.app/Info.plist
+        fi
+        
+        # 컴파일된 바이너리 복사
+        BIN_PATH=$(find SuuntoFitnessApp/.build/release -type f -perm +111 -name "SuuntoFitnessApp*" | head -n 1)
+        if [ -f "$BIN_PATH" ]; then
+          cp "$BIN_PATH" build/SuuntoFitnessApp.app/SuuntoFitnessApp
+        fi
+        
+        # Payload 패키징
+        cp -R build/SuuntoFitnessApp.app build/Payload/
+        cd build
+        zip -r "정수's_운동_앱번들.zip" SuuntoFitnessApp.app
+        zip -r "정수's_운동.ipa" Payload
+        cd ..
+
+    - name: Upload iOS Install Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: "정수-s-운동-iOS-설치파일"
+        path: |
+          build/정수's_운동.ipa
+          build/정수's_운동_앱번들.zip
+        retention-days: 14
