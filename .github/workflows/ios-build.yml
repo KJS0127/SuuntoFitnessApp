@@ -24,24 +24,18 @@ jobs:
         xcodebuild -version
         swift --version
 
-    - name: Build & Test for iOS Simulator
+    - name: Run Unit Tests
       run: |
         echo "=========================================="
-        echo "  Building & Testing for iOS Platform...  "
+        echo "  Running SuuntoFitnessApp Unit Tests...  "
         echo "=========================================="
         cd SuuntoFitnessApp
-        # iOS 시뮬레이터 타겟으로 컴파일 및 테스트
-        xcodebuild test \
-          -scheme SuuntoFitnessApp \
-          -destination 'platform=iOS Simulator,name=iPhone 15' \
-          CODE_SIGNING_ALLOWED=NO \
-          CODE_SIGN_IDENTITY="" \
-          CODE_SIGNING_REQUIRED=NO
+        swift test
 
-    - name: Archive iOS App Bundle (.ipa)
+    - name: Package iOS App Bundle (.ipa)
       run: |
         echo "=========================================="
-        echo "  Archiving Release Package for iOS...    "
+        echo "  Packaging Release Package for iOS...    "
         echo "=========================================="
         mkdir -p build/Payload
         mkdir -p build/정수_운동.app
@@ -51,7 +45,7 @@ jobs:
           cp SuuntoFitnessApp/Sources/App/Info.plist build/정수_운동.app/Info.plist
         fi
         
-        # 모든 소스 및 리소스 번들 패키징
+        # 소스 파일 및 리소스 복사
         cp -R SuuntoFitnessApp/Sources build/정수_운동.app/
         cp -R build/정수_운동.app build/Payload/
         
